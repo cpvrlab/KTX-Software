@@ -219,6 +219,8 @@ macro(commom_lib_settings lib write)
 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/other_include>
         $<INSTALL_INTERFACE:other_include>
+
+        $<BUILD_INTERFACE:${ZSTD_INSTALL}/include>
     )
 
     if( LIB_TYPE STREQUAL STATIC )
@@ -301,7 +303,7 @@ macro(commom_lib_settings lib write)
             target_link_libraries(
                 ${lib}
             PRIVATE
-                ${CMAKE_CURRENT_SOURCE_DIR}/other_lib/ios/Release-iphoneos/libzstd.a
+                ${ZSTD_INSTALL}/lib/libzstd.a
             )
         else()
             # Set a common RUNTIME_OUTPUT_DIR for all target, so that INSTALL RPATH
@@ -311,7 +313,7 @@ macro(commom_lib_settings lib write)
             target_link_libraries(
                 ${lib}
             PRIVATE
-                ${CMAKE_CURRENT_SOURCE_DIR}/other_lib/mac/Release/libzstd.a
+                ${ZSTD_INSTALL}/lib/libzstd.a
             )
         endif()
     
@@ -338,23 +340,20 @@ macro(commom_lib_settings lib write)
         )
 
     elseif(ANDROID)
-        # add_library(zstd STATIC IMPORTED)
-        # set_target_properties(zstd PROPERTIES
-        # IMPORTED_LOCATION /Users/Shared/SDK/zstd/build/cmake/install-android/lib/libzstd.a
-        # )
-        # target_link_libraries(
-        #     ktx
-        # PRIVATE
-        #     zstd
-        # )
-        set(ZSTD_BUILD_PROGRAMS OFF)
-        set(ZSTD_BUILD_TESTS OFF)
-        add_subdirectory(/Users/Shared/SDK/zstd/build/cmake zstd)
         target_link_libraries(
             ${lib}
         PRIVATE
-            libzstd_static
+            zstd
         )
+        
+        #set(ZSTD_BUILD_PROGRAMS OFF)
+        #set(ZSTD_BUILD_TESTS OFF)
+        #add_subdirectory(/Users/Shared/SDK/zstd/build/cmake zstd)
+        #target_link_libraries(
+        #    ${lib}
+        #PRIVATE
+        #    libzstd_static
+        #)
     endif()
 
     if(KTX_FEATURE_VULKAN)
@@ -385,6 +384,18 @@ macro(commom_lib_settings lib write)
 endmacro(commom_lib_settings)
 
 set(KTX_BUILD_DIR "${CMAKE_BINARY_DIR}")
+
+if(ANDROID)
+    #add_subdirectory(/Users/ghm1/Development/erlebar/externals/SLProject/externals/prebuild_scripts/zstd/build/cmake zstd)
+    #set(ZSTD_BUILD_PROGRAMS OFF)
+    #set(ZSTD_BUILD_TESTS OFF)
+
+    add_library(zstd STATIC IMPORTED)
+    set_target_properties(zstd PROPERTIES
+        IMPORTED_LOCATION ${ZSTD_INSTALL}/lib/libzstd.a
+        INTERFACE_INCLUDE_DIRECTORIES ${ZSTD_INSTALL}/include
+    )
+endif()
 
 commom_lib_settings(ktx 1)
 commom_lib_settings(ktx_read 0)
